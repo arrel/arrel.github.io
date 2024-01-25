@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Arrel Gray</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
+  <link href="http://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet" type="text/css">
+  <style>
+    * { margin: 0; padding: 0; font-size: 100%; }
+    body { line-height: 1; font-family: 'Lato', sans-serif; color: #333; background-color: #FCFCFC; font-size: 16px; }
+    p,h1,h2,h3,h4,h5,h6 { border-color: #EEE; display: block; float: left; padding: 0; margin: 0; width: 50px; text-align: center; line-height: 50px; border-width: 1px; border-style: dashed; text-transform: uppercase; border-bottom: none; border-left: none; }
+    p { color: #666; background: #FFF; font-weight: bold; }
+    h1 { color: #03738E; }
+    h2 { color: #F1B703; }
+    h3 { color: #F58602; }
+    h4 { color: #F15B07; }
+    h5 { color: #D92D01; }
+    h6 { color: #999; }
+  </style>
+</head>
+<body>
+  <div></div>
+  <script type="text/javascript">
+  (function(){
+    var chars = 0;
+    var cols = Math.floor(window.innerWidth / 51);
+    var rows = Math.ceil(window.innerHeight / 51);
+    if (rows < 12) rows = 12;
+    var messages = {};
+    messages[cols * 5] = {m:"Arrel Gray"};
+    messages[cols * 6] = {m:"Co-Founder",c:"small"}
+    messages[cols * 7] = {m:"Soldsie",c:"small"}
+
+    var displayStr = function(str) {
+      var indx;
+      var html = '';
+      var paused = false;
+      var msg;
+      for (var i = 0, len = str.length; i < len; i++) {
+        var ch = str.charAt(i);
+        if (paused) {
+          paused = (ch != '>');
+          continue;
+        } else if (ch == '<') {
+          paused = true;
+          continue;
+        }
+        paused = false;
+
+        if (msg = messages[chars - 1] || messages[chars]) {
+          html += "<h1>&nbsp;</h1>";
+          for (var j = 0, sublen = msg.m.length; j < sublen; j++) {
+            var c = msg.c ? " class=\""+msg.c+"\"" : ""
+            html += "<p"+c+">"+msg.m.charAt(j)+"</p>";
+          }
+          chars += msg.m.length + 1;
+          msg = undefined;
+        }
+
+        if (' ' == ch || "\n" == ch) continue;
+        indx = 1 + Math.floor(Math.random()*6);
+        // if (indx > 6)
+        if (Math.random() > 0.6) {
+          html += "<h1>&nbsp;</h1>";
+          chars++;
+        }
+        // else
+        html += "<h"+indx+">"+ch+"</h"+indx+">";
+        if (++chars > rows * cols - 1) break;
+      }
+      document.getElementsByTagName('div')[0].innerHTML = html;
+    }
+
+    var folks = ['Robert_Noyce','George_Westinghouse','William_Redington_Hewlett','Wright_brothers','Alan_Kay'];
+    var folk = folks[Math.floor(Math.random() * folks.length)];
+    window.makeItGo = function(data) { console.log(data); displayStr(data.parse.text['*']); }
+    var script = document.createElement('script');
+    script.src = "http://en.wikipedia.org/w/api.php?action=parse&page="+folk+"&format=json&prop=text&callback=makeItGo";;
+    document.body.appendChild(script);
+  })();
+  </script>
+</body>
+</html>
