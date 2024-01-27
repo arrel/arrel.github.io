@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Arrel Gray</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
-  <link href="http://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet" type="text/css">
   <style>
     * { margin: 0; padding: 0; font-size: 100%; }
     body { line-height: 1; font-family: 'Lato', sans-serif; color: #333; background-color: #FCFCFC; font-size: 16px; }
@@ -75,7 +75,7 @@
     var folk = folks[Math.floor(Math.random() * folks.length)];
     window.makeItGo = function(data) { console.log(data); displayStr(data.parse.text['*']); }
     var script = document.createElement('script');
-    script.src = "http://en.wikipedia.org/w/api.php?action=parse&page="+folk+"&format=json&prop=text&callback=makeItGo";;
+    script.src = "https://en.wikipedia.org/w/api.php?action=parse&page="+folk+"&format=json&prop=text&callback=makeItGo";;
     document.body.appendChild(script);
   })();
   </script>
