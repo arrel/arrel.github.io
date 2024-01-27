@@ -28,8 +28,8 @@
     if (rows < 12) rows = 12;
     var messages = {};
     messages[cols * 5] = {m:"Arrel Gray"};
-    messages[cols * 6] = {m:"Co-Founder",c:"small"}
-    messages[cols * 7] = {m:"Soldsie",c:"small"}
+    messages[cols * 6] = {m:"Head of Product",c:"small"}
+    messages[cols * 7] = {m:"Primer",c:"small"}
 
     var displayStr = function(str) {
       var indx;
@@ -71,7 +71,7 @@
       document.getElementsByTagName('div')[0].innerHTML = html;
     }
 
-    var folks = ['Robert_Noyce','George_Westinghouse','William_Redington_Hewlett','Wright_brothers','Alan_Kay'];
+    var folks = ['Robert_Noyce','George_Westinghouse','Bill_Hewlett','Wright_brothers','Alan_Kay'];
     var folk = folks[Math.floor(Math.random() * folks.length)];
     window.makeItGo = function(data) { console.log(data); displayStr(data.parse.text['*']); }
     var script = document.createElement('script');
