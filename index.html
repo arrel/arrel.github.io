@@ -13,6 +13,10 @@
       type="text/css"
     />
     <style>
+      :root {
+        --box-size: 50px;
+        --line-height: 50px;
+      }
       * {
         margin: 0;
         padding: 0;
@@ -37,9 +41,9 @@
         float: left;
         padding: 0;
         margin: 0;
-        width: 50px;
+        width: var(--box-size);
+        line-height: var(--line-height);
         text-align: center;
-        line-height: 50px;
         border-width: 1px;
         border-style: dashed;
         text-transform: uppercase;
@@ -50,6 +54,9 @@
         color: #666;
         background: #fff;
         font-weight: bold;
+      }
+      p.name {
+        color: #0b9444;
       }
       h1 {
         color: #03738e;
@@ -76,13 +83,41 @@
     <script type="text/javascript">
       (function () {
         var chars = 0;
-        var cols = Math.floor(window.innerWidth / 51);
-        var rows = Math.ceil(window.innerHeight / 51);
-        if (rows < 12) rows = 12;
+        var cols, rows, boxSize;
+
+        const calculateLayout = function() {
+          // Calculate optimal box size that divides evenly into viewport
+          const minBoxSize = 30;
+          const maxBoxSize = 80;
+          const borderSize = 1;
+
+          // Start with a reasonable number of columns (around 20-30)
+          let targetCols = 25;
+          boxSize = Math.floor(window.innerWidth / targetCols) - borderSize;
+
+          // Clamp box size to reasonable range
+          if (boxSize < minBoxSize) {
+            boxSize = minBoxSize;
+          } else if (boxSize > maxBoxSize) {
+            boxSize = maxBoxSize;
+          }
+
+          // Recalculate actual columns and rows based on final box size
+          cols = Math.floor(window.innerWidth / (boxSize + borderSize));
+          rows = Math.ceil(window.innerHeight / (boxSize + borderSize));
+          if (rows < 12) rows = 12;
+
+          // Update CSS custom properties
+          document.documentElement.style.setProperty('--box-size', boxSize + 'px');
+          document.documentElement.style.setProperty('--line-height', boxSize + 'px');
+        };
+
+        calculateLayout();
+
         var messages = {};
-        messages[cols * 5] = { m: "Arrel Gray" };
-        messages[cols * 6] = { m: " Product @", c: "small" };
-        messages[cols * 7] = { m: "Primer", c: "small" };
+        messages[cols * 5] = { m: "Arrel Gray", c: "name" };
+        messages[cols * 6] = { m: " Product &", c: "name" };
+        messages[cols * 7] = { m: "Engineering", c: "name" };
 
         const stripTag = function (str, tag) {
           const html = document.createElement("div");
@@ -152,6 +187,28 @@
           folk +
           "&format=json&prop=text&callback=makeItGo";
         document.body.appendChild(script);
+
+        // Recalculate and redraw on window resize
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+          clearTimeout(resizeTimeout);
+          resizeTimeout = setTimeout(function() {
+            chars = 0;
+            calculateLayout();
+            messages = {};
+            messages[cols * 5] = { m: "Arrel Gray", c: "name" };
+            messages[cols * 6] = { m: " Product &", c: "name" };
+            messages[cols * 7] = { m: "Engineering", c: "name" };
+
+            // Re-fetch and redisplay content
+            var newScript = document.createElement("script");
+            newScript.src =
+              "https://en.wikipedia.org/w/api.php?action=parse&page=" +
+              folk +
+              "&format=json&prop=text&callback=makeItGo";
+            document.body.appendChild(newScript);
+          }, 250);
+        });
       })();
     </script>
   </body>
