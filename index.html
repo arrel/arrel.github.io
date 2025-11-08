@@ -71,6 +71,10 @@
       }
       p.name.last-row {
         border-bottom: 1px dashed rgba(3, 115, 142, 0.5);
+        margin-bottom: -1px;
+      }
+      .below-name {
+        border-top: 1px dashed #eee;
       }
       h1 {
         color: #03738e;
@@ -279,12 +283,24 @@
             if (contentIndex < cleanStr.length) {
               var ch = cleanStr.charAt(contentIndex);
 
+              // Check if it's a space - if in row 8 below name, skip spaces
+              var isBelowName = screenPos >= cols * 8 && screenPos < cols * 9;
+              if (isBelowName && ch == " ") {
+                // Skip spaces in row 8 - advance content but don't render
+                contentIndex++;
+                screenPos--; // Decrement so loop increment keeps us at same position
+                continue;
+              }
+
+              // Check if we need top border (row 8, non-space content)
+              var belowClass = isBelowName ? ' class="below-name"' : '';
+
               // Check if it's a space
               if (ch == " ") {
                 html += "<h1>&nbsp;</h1>";
               } else {
                 var indx = 1 + Math.floor(Math.random() * 6);
-                html += "<h" + indx + ">" + ch + "</h" + indx + ">";
+                html += "<h" + indx + belowClass + ">" + ch + "</h" + indx + ">";
               }
               contentIndex++;
             } else {
