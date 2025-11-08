@@ -62,7 +62,15 @@
         font-weight: bold;
       }
       p.name {
-        color: #0b9444;
+        color: #03738e;
+        background: #fff;
+        border-color: rgba(3, 115, 142, 0.5);
+      }
+      p.name.first-char {
+        border-left: 1px dashed rgba(3, 115, 142, 0.5);
+      }
+      p.name.last-row {
+        border-bottom: 1px dashed rgba(3, 115, 142, 0.5);
       }
       h1 {
         color: #03738e;
@@ -95,7 +103,7 @@
         var scrollOffset = 0; // Number of rows to offset
         const pixelsPerRow = 100; // Scroll X pixels to move content up by one row
 
-        const calculateLayout = function() {
+        const calculateLayout = function () {
           // Calculate optimal box size that divides evenly into viewport
           const minBoxSize = 30;
           const maxBoxSize = 80;
@@ -118,17 +126,23 @@
           if (rows < 12) rows = 12;
 
           // Update CSS custom properties
-          document.documentElement.style.setProperty('--box-size', boxSize + 'px');
-          document.documentElement.style.setProperty('--line-height', boxSize + 'px');
+          document.documentElement.style.setProperty(
+            "--box-size",
+            boxSize + "px"
+          );
+          document.documentElement.style.setProperty(
+            "--line-height",
+            boxSize + "px"
+          );
         };
 
         calculateLayout();
 
         // Fixed positions for personal info (in character positions)
         const namePositions = {
-          row5: cols * 5,  // "Arrel Gray"
-          row6: cols * 6,  // " Product &"
-          row7: cols * 7   // "Engineering"
+          row5: cols * 5, // "Arrel Gray"
+          row6: cols * 6, // " Product &"
+          row7: cols * 7, // "Engineering"
         };
 
         var messages = {};
@@ -144,34 +158,79 @@
           return html.innerHTML;
         };
 
-        const isNamePosition = function(pos) {
-          return pos === namePositions.row5 ||
-                 pos === namePositions.row6 ||
-                 pos === namePositions.row7;
+        const isNamePosition = function (pos) {
+          return (
+            pos === namePositions.row5 ||
+            pos === namePositions.row6 ||
+            pos === namePositions.row7
+          );
+        };
+
+        const cleanWikiContent = function (str) {
+          // Remove entire <style>...</style> blocks first (including content)
+          str = str.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
+
+          // Remove other unwanted tags
+          str = stripTag(str, "table");
+
+          // Remove all remaining HTML tags
+          str = str.replace(/<[^>]*>/g, "");
+
+          // Remove any leftover CSS that might have leaked (like .mw-parser-output{...})
+          str = str.replace(/\.[a-z-]+[^{]*\{[^}]*\}/gi, "");
+
+          // Remove section headers that are Wikipedia meta-content
+          str = str.replace(/References\[edit\]/gi, "");
+          str = str.replace(/External links\[edit\]/gi, "");
+          str = str.replace(/See also\[edit\]/gi, "");
+          str = str.replace(/Further reading\[edit\]/gi, "");
+          str = str.replace(/Notes\[edit\]/gi, "");
+          str = str.replace(/Bibliography\[edit\]/gi, "");
+
+          // Remove [edit] links
+          str = str.replace(/\[edit\]/gi, "");
+
+          // Remove all bracketed references: [1], [2], [123], [a], [b], etc.
+          str = str.replace(/\[[0-9a-z]+\]/gi, "");
+
+          // Remove citation markers
+          str = str.replace(/\[citation needed\]/gi, "");
+          str = str.replace(/\[clarification needed\]/gi, "");
+          str = str.replace(/\[when\?\]/gi, "");
+          str = str.replace(/\[by whom\?\]/gi, "");
+
+          // Remove pronunciation guides with IPA characters
+          str = str.replace(/\/[ˈˌ][^\/]*\//g, "");
+          str = str.replace(/\([^)]*[ˈˌ][^)]*\)/g, "");
+
+          // Remove "vte" (view/talk/edit) markers
+          str = str.replace(/\bvte\b/gi, "");
+
+          // Remove Authority control databases and similar metadata blocks
+          str = str.replace(/Authority control databases[^.]*\./gi, "");
+
+          // Clean up special characters and normalize spaces
+          str = str.replace(/&nbsp;/gi, " ");
+          str = str.replace(/&amp;/gi, "&");
+          str = str.replace(/&lt;/gi, "<");
+          str = str.replace(/&gt;/gi, ">");
+          str = str.replace(/&quot;/gi, '"');
+
+          // Remove consecutive punctuation oddities
+          str = str.replace(/\s+([.,;!?])/g, "$1");
+
+          // Normalize whitespace
+          str = str.replace(/\s+/g, " ");
+          str = str.trim();
+
+          return str;
         };
 
         const displayStr = function (str, offset = 0) {
-          str = stripTag(str, "style");
-          str = stripTag(str, "table");
-          str = str.replace(/<[^>]*>?/gm, "");
-
-          // Create array of all characters (skip spaces and newlines)
-          var cleanStr = "";
-          var paused = false;
-          for (var i = 0, len = str.length; i < len; i++) {
-            var ch = str.charAt(i);
-            if (paused) {
-              paused = ch != ">";
-              continue;
-            } else if (ch == "<") {
-              paused = true;
-              continue;
-            }
-            if (ch != " " && ch != "\n") {
-              cleanStr += ch;
-            }
-          }
-
+          // Clean the Wikipedia content
+          str = cleanWikiContent(str);
+          // Convert to array of characters with spaces preserved
+          var cleanStr = str;
           // Now render with offset
           chars = 0;
           var html = "";
@@ -181,12 +240,37 @@
           for (var screenPos = 0; screenPos < rows * cols; screenPos++) {
             // Check if this is a name position (always show name here)
             if ((msg = messages[screenPos])) {
+              // Add blank square before the name (left column)
               html += "<h1>&nbsp;</h1>";
-              for (var j = 0, sublen = msg.m.length; j < sublen; j++) {
-                var c = msg.c ? ' class="' + msg.c + '"' : "";
-                html += "<p" + c + ">" + msg.m.charAt(j) + "</p>";
+              contentIndex++; // Skip content for the blank square
+
+              var isLastRow = screenPos === namePositions.row7;
+              var msgLength = msg.m.length;
+              for (var j = 0; j < msgLength; j++) {
+                var classes = msg.c || "";
+                var char = msg.m.charAt(j);
+                // Add first-char class to first character of each word
+                // For "Arrel Gray" (row5): j === 0 ('A') and j === 6 ('G')
+                // For " Product &" (row6): j === 1 ('P') and j === 9 ('&')
+                // For "Engineering" (row7): j === 0 ('E')
+                if (
+                  j === 0 ||
+                  (screenPos === namePositions.row5 && j === 6) ||
+                  (screenPos === namePositions.row6 && (j === 1 || j === 9))
+                ) {
+                  classes += " first-char";
+                }
+                // Add last-row class to all characters in ENGINEERING
+                if (isLastRow) {
+                  classes += " last-row";
+                }
+                var c = classes ? ' class="' + classes.trim() + '"' : "";
+                html += "<p" + c + ">" + char + "</p>";
+                contentIndex++; // Skip content for each personal info character
               }
-              screenPos += msg.m.length;
+              // We rendered: 1 blank + msgLength characters
+              // Skip ahead by that amount (the for loop will add 1 more)
+              screenPos += msgLength; // This accounts for the message chars, the loop adds 1 for the blank
               msg = undefined;
               continue;
             }
@@ -194,11 +278,12 @@
             // Show content from Wikipedia, offset by scroll
             if (contentIndex < cleanStr.length) {
               var ch = cleanStr.charAt(contentIndex);
-              var indx = 1 + Math.floor(Math.random() * 6);
 
-              if (Math.random() > 0.6) {
+              // Check if it's a space
+              if (ch == " ") {
                 html += "<h1>&nbsp;</h1>";
               } else {
+                var indx = 1 + Math.floor(Math.random() * 6);
                 html += "<h" + indx + ">" + ch + "</h" + indx + ">";
               }
               contentIndex++;
@@ -213,7 +298,8 @@
           // Set scroll spacer height to enable scrolling
           var totalContentRows = Math.ceil(cleanStr.length / cols) + 10;
           var spacerHeight = totalContentRows * pixelsPerRow;
-          document.getElementById("scroll-spacer").style.height = spacerHeight + "px";
+          document.getElementById("scroll-spacer").style.height =
+            spacerHeight + "px";
         };
 
         var folks = [
@@ -236,7 +322,7 @@
         document.body.appendChild(script);
 
         // Handle scroll events
-        window.addEventListener('scroll', function() {
+        window.addEventListener("scroll", function () {
           var newOffset = Math.floor(window.scrollY / pixelsPerRow);
           if (newOffset !== scrollOffset && wikiContent) {
             scrollOffset = newOffset;
@@ -246,9 +332,9 @@
 
         // Recalculate and redraw on window resize
         let resizeTimeout;
-        window.addEventListener('resize', function() {
+        window.addEventListener("resize", function () {
           clearTimeout(resizeTimeout);
-          resizeTimeout = setTimeout(function() {
+          resizeTimeout = setTimeout(function () {
             scrollOffset = Math.floor(window.scrollY / pixelsPerRow);
             calculateLayout();
 
